@@ -19,89 +19,119 @@
             font-family: 'Courier New', monospace; color: var(--neon);
         }
 
-        /* MAIN BACKGROUND */
+        /* ===========================
+           BACKGROUND & ANIMATED DINOS
+        =========================== */
         .bg-overlay {
             position: fixed; inset: 0;
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.95)),
                         url('https://images.unsplash.com/photo-1550355191-aa8a80b403e8?auto=format&fit=crop&w=1400&q=80');
             background-size: cover; background-position: center; z-index: -5;
         }
 
-        /* BLAST DOORS */
+        .floating-dino {
+            position: absolute; opacity: 0.1; font-size: 8rem; z-index: -4;
+            animation: floatDino linear infinite;
+            pointer-events: none;
+        }
+        @keyframes floatDino {
+            from { transform: translateX(-20vw) rotate(0deg); }
+            to { transform: translateX(120vw) rotate(10deg); }
+        }
+
+        /* ===========================
+           BLAST DOORS
+        =========================== */
         #door-left, #door-right {
             position: fixed; top: 0; width: 50%; height: 100%; z-index: 1000;
             display: flex; justify-content: center; align-items: center;
-            font-size: 3rem; color: #444; background: #222;
-            border: 10px solid #333;
-            transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            font-size: 3rem; color: #444; background: linear-gradient(90deg, #111, #222);
+            border: 8px solid #333; transition: transform 1.8s cubic-bezier(0.7, 0, 0.3, 1);
         }
         #door-left { left: 0; border-right: 4px solid var(--neon); }
         #door-right { right: 0; border-left: 4px solid var(--neon); }
-        
         .doors-open #door-left { transform: translateX(-100%); }
         .doors-open #door-right { transform: translateX(100%); }
 
-        /* INTRO SCREEN - REPLACED LION WITH DINO */
+        /* ===========================
+           INTRO SCREEN
+        =========================== */
         #intro-screen {
             position: absolute; inset: 0; z-index: 1001;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)),
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
                         url('https://images.unsplash.com/photo-1525877442103-5ddb2089e2bb?auto=format&fit=crop&w=1400&q=80');
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center; padding: 40px;
         }
-        #intro-screen h1 { font-size: 4rem; color: var(--accent); text-shadow: 0 0 20px black; margin: 0; }
-        #intro-screen p { font-size: 1.2rem; color: white; max-width: 600px; margin: 20px 0; }
+        #intro-screen h1 { font-size: 4rem; color: var(--accent); text-shadow: 0 0 20px var(--accent); margin: 0; }
+        .intro-icon { font-size: 6rem; animation: pulse 2s infinite; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
 
-        /* GAME LAYOUT */
+        /* ===========================
+           GAME INTERFACE
+        =========================== */
         #game-container { display: flex; flex-direction: column; width: 100vw; height: 100vh; border: 4px solid var(--neon); box-sizing: border-box; }
         #header { padding: 20px; border-bottom: 2px solid var(--neon); background: rgba(0,0,0,0.9); }
         #map { display: flex; justify-content: space-around; margin-top: 10px; }
-        .map-zone { padding: 6px 14px; border: 1px solid var(--neon); font-size: 0.8rem; opacity: 0.3; }
-        .map-zone.active { opacity: 1; background: rgba(0,255,65,0.2); box-shadow: 0 0 10px var(--neon); }
+        .map-zone { padding: 8px 15px; border: 1px solid var(--neon); font-size: 0.8rem; opacity: 0.3; transition: 0.5s; }
+        .map-zone.active { opacity: 1; background: rgba(0,255,65,0.2); box-shadow: 0 0 15px var(--neon); }
         .map-zone.cleared { background: var(--neon); color: black; opacity: 1; }
 
-        #main-display { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; }
-        #question-grid { display: grid; grid-template-columns: repeat(2, 220px); gap: 15px; margin-bottom: 20px; }
-        .question-card { border: 2px solid var(--neon); padding: 15px; cursor: pointer; background: rgba(0,255,65,0.05); }
-        .question-card.completed { background: var(--neon); color: black; }
-        .question-card.active { border-color: var(--accent); background: rgba(255,215,0,0.1); }
+        #main-display { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; position: relative; }
+        
+        #question-grid { display: grid; grid-template-columns: repeat(2, 220px); gap: 20px; margin-bottom: 30px; }
+        .question-card { border: 2px solid var(--neon); padding: 20px; cursor: pointer; background: rgba(0,255,65,0.05); transition: 0.3s; }
+        .question-card:hover { transform: scale(1.05); background: rgba(0,255,65,0.1); }
+        .question-card.completed { background: var(--neon); color: black; font-weight: bold; }
+        .question-card.active { border-color: var(--accent); box-shadow: 0 0 20px var(--accent); }
 
-        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); color: var(--neon); font-family: inherit; font-size: 2rem; text-align: center; width: 450px; outline: none; margin-top: 10px; }
-        #feedback { margin-top: 15px; font-weight: bold; height: 25px; }
+        .question-text { font-size: 1.6rem; max-width: 800px; min-height: 80px; margin-bottom: 20px; color: white; }
+        input { background: transparent; border: none; border-bottom: 3px solid var(--neon); color: var(--neon); font-family: inherit; font-size: 2.2rem; text-align: center; width: 400px; outline: none; }
+        
+        #hint-box { margin-top: 20px; color: var(--accent); font-style: italic; min-height: 30px; opacity: 0; transition: opacity 1s; }
+        #hint-box.show { opacity: 1; }
 
-        /* FINAL SCENE */
+        /* ===========================
+           FINAL SCENE
+        =========================== */
         #final-scene {
             position: fixed; inset: 0; z-index: 5000; display: none;
-            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
                         url('https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1400&q=80');
             background-size: cover; background-position: center;
-            justify-content: center; align-items: center; flex-direction: column;
+            justify-content: center; align-items: center; flex-direction: column; text-align: center;
         }
-        #final-scene h1 { font-size: 5rem; color: white; text-shadow: 0 0 30px #000; }
+        #final-scene h1 { font-size: 5rem; color: white; text-shadow: 0 0 30px black; }
         .firework { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: explode 1s ease-out forwards; }
-        @keyframes explode { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(25); opacity: 0; } }
-        
-        button { background: var(--neon); color: black; border: none; padding: 15px 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; font-family: inherit; }
+        @keyframes explode { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(30); opacity: 0; } }
+
+        button { background: var(--neon); color: black; border: none; padding: 20px 40px; font-size: 1.3rem; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.3s; }
+        button:hover { background: white; transform: scale(1.1); }
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 60% { transform: translateX(10px); } }
     </style>
 </head>
 
 <body class="doors-open">
 
     <div class="bg-overlay"></div>
+    <div class="floating-dino" style="top:10%; animation-duration:25s;">🦖</div>
+    <div class="floating-dino" style="top:50%; animation-duration:35s;">🦕</div>
 
-    <div id="door-left">DOOR</div>
-    <div id="door-right">LOCKED</div>
+    <div id="door-left">VAULT</div>
+    <div id="door-right">DOORS</div>
 
     <div id="intro-screen">
-        <h1 style="color: #ffd700;">🦖 DINOSAUR VAULT 🦖</h1>
-        <p>The security system has locked the prehistoric exhibit. To open the doors, you must verify 16 evolutionary data points.</p>
+        <div class="intro-icon">🦖</div>
+        <h1>THE DINOSAUR VAULT</h1>
+        <p>SECURITY BREACH: Containment levels are critical. Verify evolutionary evidence to lock the gates and secure the park.</p>
         <button onclick="beginGame()">INITIALIZE SYSTEM</button>
     </div>
 
     <div id="game-container">
         <div id="header">
-            <div style="text-align:center; letter-spacing: 2px;">SECURITY OVERRIDE TERMINAL</div>
+            <div style="text-align:center; font-weight:bold; letter-spacing: 3px;">CENTRAL SECURITY TERMINAL</div>
             <div id="map">
                 <div class="map-zone" id="zone-0">ZONE 1: FOSSILS</div>
                 <div class="map-zone" id="zone-1">ZONE 2: ANATOMY</div>
@@ -111,18 +141,23 @@
         </div>
 
         <div id="main-display">
-            <div id="status-line" style="margin-bottom:15px; color:var(--accent);">DOOR 1: 0/4 DATA POINTS</div>
+            <div id="status-line" style="margin-bottom:20px; color:var(--accent); font-weight: bold;">DOOR 1: 0/4 DATA BLOCKS SECURED</div>
+            
             <div id="question-grid"></div>
-            <div id="q-text" style="font-size: 1.4rem; min-height: 60px; max-width: 700px;">Please select a data lock above...</div>
-            <input type="text" id="user-input" autocomplete="off" placeholder="ENTER ANSWER">
-            <div id="feedback"></div>
+
+            <div class="question-text" id="q-text">System Ready. Choose a data block...</div>
+            
+            <input type="text" id="user-input" autocomplete="off" placeholder="ENTER KEYCODE">
+            
+            <div id="feedback" style="margin-top:15px; height:20px; font-weight:bold;"></div>
+            <div id="hint-box"></div>
         </div>
     </div>
 
     <div id="final-scene">
-        <h1>ACCESS GRANTED</h1>
-        <p>You have successfully escaped the Dinosaur Vault!</p>
-        <button onclick="location.reload()">REPLAY MISSION</button>
+        <h1>SYSTEM SECURED</h1>
+        <p style="font-size: 1.5rem; color: white;">The gates are locked. The dinosaurs are contained. Mission Success.</p>
+        <button onclick="location.reload()">REBOOT TERMINAL</button>
     </div>
 
     <script>
@@ -130,37 +165,37 @@
             {
                 zone: "FOSSILS",
                 questions: [
-                    { q: "Older fossils are found in deeper rock layers. This is the law of ____.", a: "superposition" },
-                    { q: "A fossil used to date the rock layer it's in is an ____ fossil.", a: "index" },
-                    { q: "Most fossils are made of hard parts like bone. (true/false)", a: "true" },
-                    { q: "The study of fossils is called ____.", a: "paleontology" }
+                    { q: "The law of ____ states older fossils are found in deeper rock layers.", a: "superposition", hint: "Think: One thing placed on top of another." },
+                    { q: "A fossil used to date the rock layer it's in is an ____ fossil.", a: "index", hint: "It acts like a 'label' for that time period." },
+                    { q: "Most fossils are made of hard parts like bone. (True/False)", a: "true", hint: "Soft tissue rarely survives." },
+                    { q: "The study of fossils is called ____.", a: "paleontology", hint: "Starts with 'Paleo'." }
                 ]
             },
             {
                 zone: "ANATOMY",
                 questions: [
-                    { q: "Same structure, different function (like human arm/bat wing): ____ structures.", a: "homologous" },
-                    { q: "Similar function, different structure (like bird/butterfly wing): ____ structures.", a: "analogous" },
-                    { q: "Leftover body parts with no current use (like tailbones) are ____.", a: "vestigial" },
-                    { q: "Do homologous structures suggest a common ancestor? (yes/no)", a: "yes" }
+                    { q: "Same structure, different function (like human arm/bat wing): ____ structures.", a: "homologous", hint: "Homo means 'same'." },
+                    { q: "Similar function, different structure (like bird/butterfly wing): ____ structures.", a: "analogous", hint: "They evolved independently for the same job." },
+                    { q: "Leftover body parts with no current use (like tailbones) are ____.", a: "vestigial", hint: "A 'vestige' of the past." },
+                    { q: "Do homologous structures suggest a common ancestor? (Yes/No)", a: "yes", hint: "Structural patterns come from DNA." }
                 ]
             },
             {
                 zone: "EMBRYOLOGY",
                 questions: [
-                    { q: "Early stage vertebrates have ____ slits, showing they once lived in water.", a: "gill" },
-                    { q: "Vertebrates look very similar during early ____ development.", a: "embryo" },
-                    { q: "The more similar the embryos, the more ____ the ancestor.", a: "recent" },
-                    { q: "Embryology proves that all life is ____.", a: "connected" }
+                    { q: "Early stage vertebrates have ____ slits, showing shared ancestry.", a: "gill", hint: "Think about what a fish uses to breathe." },
+                    { q: "Vertebrates look very similar during early ____ development.", a: "embryo", hint: "The name of the study is 'Embryology'." },
+                    { q: "Shared embryonic traits suggest a shared ____.", a: "ancestor", hint: "The relative from the past." },
+                    { q: "Embryology proves that all vertebrate life is ____.", a: "connected", hint: "We all share a common history." }
                 ]
             },
             {
                 zone: "SELECTION",
                 questions: [
-                    { q: "Nature chooses which traits help an organism survive. This is ____ selection.", a: "natural" },
-                    { q: "A change that helps an organism survive in its environment is an ____.", a: "adaptation" },
-                    { q: "Survival of the ____.", a: "fittest" },
-                    { q: "Who is the scientist famous for the theory of evolution?", a: "darwin" }
+                    { q: "Nature chooses which traits help an organism survive. This is ____ selection.", a: "natural", hint: "The opposite of 'Artificial' selection." },
+                    { q: "A change that helps an organism survive in its environment is an ____.", a: "adaptation", hint: "Adjusting to fit the surroundings." },
+                    { q: "Survival of the ____.", a: "fittest", hint: "Being the best 'fit' for the environment." },
+                    { q: "The scientist famous for the theory of evolution by natural selection.", a: "darwin", hint: "He visited the Galapagos Islands." }
                 ]
             }
         ];
@@ -168,29 +203,31 @@
         let zoneIdx = 0;
         let solvedThisZone = [];
         let activeQIdx = null;
+        let hintTimer;
 
         const input = document.getElementById('user-input');
         const qDisplay = document.getElementById('q-text');
         const feedback = document.getElementById('feedback');
+        const hintBox = document.getElementById('hint-box');
 
         function beginGame() {
             document.getElementById('intro-screen').style.display = 'none';
-            renderZone();
+            renderUI();
         }
 
-        function renderZone() {
+        function renderUI() {
             const currentZone = gameData[zoneIdx];
             
-            // Update Map
+            // Update the Map Visuals
             document.querySelectorAll('.map-zone').forEach((z, i) => {
                 z.className = 'map-zone';
                 if (i < zoneIdx) z.classList.add('cleared');
                 if (i === zoneIdx) z.classList.add('active');
             });
 
-            document.getElementById('status-line').innerText = `DOOR ${zoneIdx + 1}: ${solvedThisZone.length}/4 DATA POINTS`;
+            document.getElementById('status-line').innerText = `DOOR ${zoneIdx + 1}: ${solvedThisZone.length}/4 DATA BLOCKS SECURED`;
 
-            // Update Grid
+            // Build the selection grid
             const grid = document.getElementById('question-grid');
             grid.innerHTML = "";
             currentZone.questions.forEach((q, i) => {
@@ -200,7 +237,7 @@
                     card.classList.add('completed');
                     card.innerText = "✓ SECURED";
                 } else {
-                    card.innerText = `DATA LOCK ${i + 1}`;
+                    card.innerText = `BLOCK ${i + 1}`;
                 }
                 if (activeQIdx === i) card.classList.add('active');
 
@@ -210,62 +247,79 @@
                     qDisplay.innerText = q.q;
                     input.value = "";
                     input.focus();
-                    renderZone();
+                    clearTimeout(hintTimer);
+                    hintBox.classList.remove('show');
+                    startHint(q.hint);
+                    renderUI();
                 };
                 grid.appendChild(card);
             });
         }
 
+        function startHint(txt) {
+            hintTimer = setTimeout(() => {
+                hintBox.innerText = "🦖 RAPTOR AI HINT: " + txt;
+                hintBox.classList.add('show');
+            }, 12000); // Hint appears after 12 seconds
+        }
+
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 if (activeQIdx === null) return;
+                
                 const correct = gameData[zoneIdx].questions[activeQIdx].a.toLowerCase();
-                if (input.value.trim().toLowerCase() === correct) {
+                const user = input.value.trim().toLowerCase();
+
+                if (user === correct) {
                     solvedThisZone.push(activeQIdx);
                     activeQIdx = null;
-                    qDisplay.innerText = "Access Granted. Select another lock.";
-                    feedback.innerText = "CORRECT";
+                    feedback.innerText = "✓ ACCESS GRANTED";
                     feedback.style.color = "var(--neon)";
-                    
+                    clearTimeout(hintTimer);
+                    hintBox.classList.remove('show');
+
                     if (solvedThisZone.length >= 4) {
-                        nextDoor();
+                        doorTransition();
                     } else {
-                        renderZone();
+                        qDisplay.innerText = "Block Secured. Select next block...";
+                        renderUI();
                     }
                 } else {
-                    feedback.innerText = "ACCESS DENIED - TRY AGAIN";
+                    document.getElementById('main-display').classList.add('shake');
+                    feedback.innerText = "× ACCESS DENIED";
                     feedback.style.color = "var(--danger)";
+                    setTimeout(() => document.getElementById('main-display').classList.remove('shake'), 400);
                 }
             }
         });
 
-        function nextDoor() {
+        function doorTransition() {
             document.body.classList.remove('doors-open'); // Close doors
             feedback.innerText = "";
-            qDisplay.innerText = "OVERRIDING SECURITY...";
+            qDisplay.innerText = "LOCKING ZONE AND MOVING TO NEXT VAULT...";
 
             setTimeout(() => {
                 zoneIdx++;
                 solvedThisZone = [];
                 if (zoneIdx >= gameData.length) {
                     document.getElementById('final-scene').style.display = 'flex';
-                    setInterval(spawnFirework, 300);
+                    setInterval(firework, 400);
                 } else {
-                    renderZone();
+                    renderUI();
+                    qDisplay.innerText = "Select a data block...";
                     document.body.classList.add('doors-open'); // Open doors
                 }
-            }, 2000);
+            }, 2200);
         }
 
-        function spawnFirework() {
-            const container = document.getElementById('final-scene');
-            const fw = document.createElement('div');
-            fw.className = 'firework';
-            fw.style.left = Math.random() * 100 + 'vw';
-            fw.style.top = Math.random() * 60 + 'vh';
-            fw.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
-            container.appendChild(fw);
-            setTimeout(() => fw.remove(), 1000);
+        function firework() {
+            const f = document.createElement('div');
+            f.className = 'firework';
+            f.style.left = Math.random() * 100 + 'vw';
+            f.style.top = Math.random() * 70 + 'vh';
+            f.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.getElementById('final-scene').appendChild(f);
+            setTimeout(() => f.remove(), 1000);
         }
     </script>
 </body>
