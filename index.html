@@ -252,6 +252,44 @@ button:hover{
 }
 
 #question-grid{
+    /* ===========================
+   ZONE SELECTOR
+=========================== */
+
+#zone-selector{
+    display:flex;
+    gap:15px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.zone-button{
+    border:2px solid var(--accent);
+    padding:12px 20px;
+    cursor:pointer;
+
+    background:rgba(255,215,0,0.08);
+
+    transition:0.3s;
+}
+
+.zone-button:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 15px var(--accent);
+}
+
+.zone-button.active{
+    background:var(--accent);
+    color:black;
+    font-weight:bold;
+}
+
+.zone-button.complete{
+    background:var(--neon);
+    color:black;
+    border-color:var(--neon);
+}
     display:grid;
     grid-template-columns:repeat(2, 220px);
     gap:20px;
@@ -867,6 +905,229 @@ function openDoorAnimation(){
             questionGrid.style.display='none';
 
             hintBox.style.display='none';
+            <!-- ===========================
+     ADD THIS CSS
+     Put this ABOVE </style>
+=========================== -->
+
+/* ===========================
+   FINAL ESCAPE SCENE
+=========================== */
+
+#final-scene{
+    position:fixed;
+    inset:0;
+
+    background:
+        linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.45)),
+        url('https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1400&q=80');
+
+    background-size:cover;
+    background-position:center;
+
+    display:none;
+
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+
+    z-index:5000;
+
+    overflow:hidden;
+}
+
+#final-scene h1{
+    font-size:5rem;
+    color:white;
+    text-shadow:0 0 20px black;
+    animation:finalGlow 2s infinite alternate;
+}
+
+#final-scene p{
+    font-size:1.5rem;
+    color:white;
+    text-shadow:0 0 10px black;
+}
+
+@keyframes finalGlow{
+    from{
+        transform:scale(1);
+    }
+
+    to{
+        transform:scale(1.05);
+    }
+}
+
+/* ===========================
+   FIREWORKS
+=========================== */
+
+.firework{
+    position:absolute;
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+
+    animation:explode 1.5s ease-out forwards;
+}
+
+@keyframes explode{
+
+    0%{
+        transform:scale(0);
+        opacity:1;
+    }
+
+    100%{
+        transform:scale(18);
+        opacity:0;
+    }
+}
+
+/* ===========================
+   DINOSAURS
+=========================== */
+
+.final-dino{
+    position:absolute;
+    font-size:6rem;
+    animation:walkDino linear infinite;
+    opacity:0.9;
+}
+
+.final-dino:nth-child(1){
+    bottom:10%;
+    left:-10%;
+    animation-duration:20s;
+}
+
+.final-dino:nth-child(2){
+    bottom:25%;
+    left:-20%;
+    animation-duration:30s;
+}
+
+.final-dino:nth-child(3){
+    bottom:5%;
+    left:-15%;
+    animation-duration:25s;
+}
+
+@keyframes walkDino{
+
+    from{
+        transform:translateX(0);
+    }
+
+    to{
+        transform:translateX(130vw);
+    }
+}
+    <!-- ===========================
+     ADD THIS HTML
+     Put this RIGHT BEFORE </body>
+=========================== -->
+
+<div id="final-scene">
+
+    <div class="final-dino">🦖</div>
+    <div class="final-dino">🦕</div>
+    <div class="final-dino">🦖</div>
+
+    <h1>YOU ESCAPED!</h1>
+
+    <p>
+        The park gates open as fireworks explode above the dinosaur valley.
+    </p>
+
+</div>
+    /* ===========================
+   ADD THIS FUNCTION
+   Put this ABOVE openDoorAnimation()
+=========================== */
+
+function launchFireworks(){
+
+    const finalScene =
+        document.getElementById('final-scene');
+
+    for(let i = 0; i < 40; i++){
+
+        const firework =
+            document.createElement('div');
+
+        firework.className = 'firework';
+
+        firework.style.left =
+            Math.random() * 100 + 'vw';
+
+        firework.style.top =
+            Math.random() * 70 + 'vh';
+
+        firework.style.background =
+            `hsl(${Math.random()*360},100%,60%)`;
+
+        finalScene.appendChild(firework);
+
+        setTimeout(()=>{
+
+            firework.remove();
+
+        },1500);
+    }
+}
+    /* ===========================
+   REPLACE THIS SECTION
+   INSIDE openDoorAnimation()
+
+   REPLACE:
+
+   if(zoneIdx >= gameData.length){
+
+=========================== */
+
+if(zoneIdx >= gameData.length){
+
+    qText.innerText =
+        "🦖 ALL SECURITY DOORS OPENED.";
+
+    status.innerText =
+        "PARK GATES UNLOCKED";
+
+    input.style.display='none';
+
+    questionGrid.style.display='none';
+
+    hintBox.style.display='none';
+
+    /* CLOSE DOORS FIRST */
+
+    document.body.classList.remove('doors-open');
+
+    setTimeout(()=>{
+
+        /* OPEN INTO DINOSAUR PARK */
+
+        document.body.classList.add('doors-open');
+
+        document.getElementById('final-scene')
+            .style.display='flex';
+
+        launchFireworks();
+
+        /* CONTINUOUS FIREWORKS */
+
+        setInterval(launchFireworks, 2500);
+
+    },2500);
+
+}else{
+
+    updateUI();
+}
 
         }else{
 
