@@ -4,141 +4,195 @@
     <meta charset="UTF-8">
     <title>Dino-Vault: The Evolution Escape</title>
     <style>
-        :root { --neon: #00ff41; --danger: #ff3131; --bg: #050505; --panel-bg: #111; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;}
+        :root { --neon: #00ff41; --danger: #ff3131; --bg: #050505; --accent: #ffd700; }
         
-        #terminal { width: 90%; max-width: 800px; height: 85vh; border: 2px solid var(--neon); display: flex; flex-direction: column; background: var(--panel-bg); box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); position: relative; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Courier New', monospace; color: var(--neon); overflow: hidden; }
 
-        /* Lock Status Bar */
-        #lock-panel { display: flex; justify-content: space-around; padding: 20px; border-bottom: 2px solid var(--neon); background: rgba(0,255,65,0.05); }
-        .lock-container { position: relative; width: 50px; height: 50px; text-align: center;}
-        .svg-icon { width: 35px; height: 35px; fill: var(--neon); transition: all 0.5s; }
-        .lock-status { font-size: 0.6rem; text-transform: uppercase; margin-top: 5px;}
-        .unlocked { opacity: 0.2; filter: brightness(0.5); }
-
-        /* Content Area */
-        #game-content { flex-grow: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center; text-align: center;}
-        h1 { font-size: 2rem; letter-spacing: 3px; border-bottom: 2px solid var(--neon); padding-bottom: 10px;}
-        p { line-height: 1.6; font-size: 1.1rem; }
-        
-        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); color: var(--neon); width: 80%; font-size: 1.5rem; outline: none; margin: 20px auto; text-align: center; display: none;}
-        
-        button { background: var(--neon); color: black; border: none; padding: 15px 30px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 1.2rem; margin-top: 20px;}
-        button:hover { background: white; }
-
-        /* Animations */
-        @keyframes keyInsert { 
-            0% { transform: translate(-100px, 100px) rotate(-45deg); opacity: 0; }
-            50% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            100% { transform: scale(0); opacity: 0; }
+        /* Dinosaur Background Aesthetic */
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
+                        url('https://images.unsplash.com/photo-1517922193564-c39309b80b91?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover; background-position: center; z-index: -1; opacity: 0.4;
         }
-        .key-animation { animation: keyInsert 1s forwards; position: absolute; z-index: 100; fill: gold; width: 60px; height: 60px; top: 20%; left: 45%;}
+
+        #game-container {
+            display: flex; flex-direction: column; height: 100vh; width: 100vw;
+            border: 4px solid var(--neon); box-sizing: border-box;
+        }
+
+        /* The Sliding Blast Doors */
+        #door-left, #door-right {
+            position: fixed; top: 0; width: 50%; height: 100%; background: #222;
+            border: 5px solid #444; z-index: 1000; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #555;
+        }
+        #door-left { left: 0; border-right: 2px solid var(--neon); }
+        #door-right { right: 0; border-left: 2px solid var(--neon); }
+        .doors-open #door-left { transform: translateX(-100%); }
+        .doors-open #door-right { transform: translateX(100%); }
+
+        /* Top Header & Map */
+        #header { padding: 20px; border-bottom: 2px solid var(--neon); background: rgba(0,0,0,0.9); }
+        #map { display: flex; justify-content: space-around; margin-top: 10px; }
+        .map-zone { padding: 5px 15px; border: 1px solid var(--neon); font-size: 0.7rem; opacity: 0.4; transition: 0.5s; }
+        .map-zone.active { opacity: 1; background: rgba(0,255,65,0.2); box-shadow: 0 0 10px var(--neon); }
+        .map-zone.cleared { background: var(--neon); color: black; opacity: 1; }
+
+        /* Interaction Area */
+        #main-display { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+        .question-text { font-size: 1.5rem; max-width: 700px; margin-bottom: 30px; min-height: 100px; }
+        
+        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); color: var(--neon); font-family: inherit; font-size: 2rem; text-align: center; outline: none; width: 300px; }
+        
+        #intro-screen { position: absolute; inset: 0; background: var(--bg); z-index: 1001; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; text-align: center; }
+        
+        .shake { animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
     </style>
 </head>
-<body>
+<body class="doors-open">
 
-<svg style="display: none;">
-    <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M12 17a2 2 0 0 0 2-2 2 2 0 0 0-2-2 2 2 0 0 0-2 2 2 2 0 0 0 2 2m6-9h-1V6a5 5 0 0 0-5-5 5 5 0 0 0-5 5v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2m-6-5a3 3 0 0 1 3 3v2H9V6a3 3 0 0 1 3-3Z"/></symbol>
-    <symbol id="icon-key" viewBox="0 0 24 24"><path d="M7 14a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m0-4a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4a3.91 3.91 0 0 0-1.16-2.83L9.41 10H11v2h2v-2h2v2h2v-2h1a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H9.41L7.83 5.58A4 4 0 0 0 7 10Z"/></symbol>
-</svg>
+<div class="bg-overlay"></div>
 
-<div id="terminal">
-    <div id="lock-panel" style="display:none;">
-        <div class="lock-container" id="lock-0"><svg class="svg-icon"><use xlink:href="#icon-lock"></use></svg><div class="lock-status">Active</div></div>
-        <div class="lock-container" id="lock-1"><svg class="svg-icon unlocked"><use xlink:href="#icon-lock"></use></svg><div class="lock-status">Locked</div></div>
-        <div class="lock-container" id="lock-2"><svg class="svg-icon unlocked"><use xlink:href="#icon-lock"></use></svg><div class="lock-status">Locked</div></div>
-        <div class="lock-container" id="lock-3"><svg class="svg-icon unlocked"><use xlink:href="#icon-lock"></use></svg><div class="lock-status">Locked</div></div>
+<div id="door-left">SYSTEM</div>
+<div id="door-right">LOCKED</div>
+
+<div id="intro-screen">
+    <h1>THE DINOSAUR VAULT</h1>
+    <p>You are trapped in the security hub. The exhibit doors have malfunctioned.</p>
+    <p>There are <strong>4 SECURITY DOORS</strong> between you and the exit.</p>
+    <p>Each door requires <strong>4 EVIDENCE VERIFICATIONS</strong> to open.</p>
+    <button style="padding: 20px 40px; font-size: 1.5rem; background: var(--neon); cursor: pointer;" onclick="beginGame()">INITIALIZE SYSTEM</button>
+</div>
+
+<div id="game-container">
+    <div id="header">
+        <div style="text-align: center; font-weight: bold;">PARK SECURITY TERMINAL</div>
+        <div id="map">
+            <div class="map-zone" id="zone-0">ZONE 1: FOSSILS</div>
+            <div class="map-zone" id="zone-1">ZONE 2: ANATOMY</div>
+            <div class="map-zone" id="zone-2">ZONE 3: EMBRYOS</div>
+            <div class="map-zone" id="zone-3">ZONE 4: SELECTION</div>
+        </div>
     </div>
 
-    <div id="animation-zone"></div>
-
-    <div id="game-content">
-        <h1>THE DINO-VAULT</h1>
-        <p><strong>MISSION:</strong> You are the lead curator for the Prehistoric Museum. The Grand Dinosaur Exhibit is locked behind a biometric security system.</p>
-        <p>The system will only unlock if you provide evidence of <strong>Evolution and Natural Selection</strong>.</p>
-        <p>Complete all 4 verification layers to open the vault doors!</p>
-        <button onclick="startGame()">INITIALIZE OVERRIDE</button>
-    </div>
-    
-    <div style="text-align: center;">
-        <input type="text" id="user-input" autocomplete="off" placeholder="TYPE ANSWER & ENTER">
-        <p id="feedback" style="color: var(--danger); font-weight: bold; min-height: 20px;"></p>
+    <div id="main-display">
+        <div id="status-line" style="margin-bottom: 10px; color: var(--accent);">DOOR 1: VERIFICATION 1/4</div>
+        <div class="question-text" id="q-text">System initializing...</div>
+        <input type="text" id="user-input" autocomplete="off" placeholder="???">
+        <p id="feedback" style="margin-top: 20px; min-height: 20px;"></p>
     </div>
 </div>
 
 <script>
-    const rooms = [
-        { title: "LAYER 1: FOSSIL RECORD", questions: [{ q: "What scientific law states that older fossils are found in deeper rock layers?", a: "superposition" }] },
-        { title: "LAYER 2: COMPARATIVE ANATOMY", questions: [{ q: "What do we call body parts that have the same structure but different functions (like a whale fin and human arm)?", a: "homologous" }] },
-        { title: "LAYER 3: EMBRYOLOGY", questions: [{ q: "True or False: Shared traits in early embryos suggest a common ancestor.", a: "true" }] },
-        { title: "LAYER 4: NATURAL SELECTION", questions: [{ q: "In a forest of dark trees, which color moth is more likely to survive and reproduce?", a: "dark" }] }
+    const gameData = [
+        {
+            zone: "FOSSIL RECORD",
+            questions: [
+                { q: "The law of ____ states older fossils are deeper.", a: "superposition" },
+                { q: "Fossils used to date rock layers are called ____ fossils.", a: "index" },
+                { q: "Can we find soft tissue in most fossils? (yes/no)", a: "no" },
+                { q: "What do we call a scientist who studies fossils?", a: "paleontologist" }
+            ]
+        },
+        {
+            zone: "COMPARATIVE ANATOMY",
+            questions: [
+                { q: "Structures with similar bones but different uses are ____.", a: "homologous" },
+                { q: "Structures that look similar but have NO common ancestor are ____.", a: "analogous" },
+                { q: "A tailbone in a human is a _____ structure (no longer used).", a: "vestigial" },
+                { q: "Do homologous structures suggest a common ancestor? (yes/no)", a: "yes" }
+            ]
+        },
+        {
+            zone: "EMBRYOLOGY",
+            questions: [
+                { q: "All vertebrate embryos have ____ slits early on.", a: "gill" },
+                { q: "True or False: Human embryos have a tail during development.", a: "true" },
+                { q: "Shared embryonic traits suggest a shared ____.", a: "ancestor" },
+                { q: "Embryology studies the _____ of an organism.", a: "development" }
+            ]
+        },
+        {
+            zone: "NATURAL SELECTION",
+            questions: [
+                { q: "Organisms with the best traits survive. This is 'Survival of the ____'.", a: "fittest" },
+                { q: "A trait that helps an organism survive is an ____.", a: "adaptation" },
+                { q: "What provides the 'selection pressure'? (the ____)", a: "environment" },
+                { q: "Genetic ____ must exist for selection to happen.", a: "variation" }
+            ]
+        }
     ];
 
-    let currentRoom = 0;
-    let currentQuestion = 0;
+    let zoneIdx = 0;
+    let qIdx = 0;
 
-    const contentDiv = document.getElementById('game-content');
-    const inputField = document.getElementById('user-input');
+    const input = document.getElementById('user-input');
+    const qText = document.getElementById('q-text');
+    const status = document.getElementById('status-line');
     const feedback = document.getElementById('feedback');
-    const lockPanel = document.getElementById('lock-panel');
 
-    function startGame() {
-        lockPanel.style.display = 'flex';
-        inputField.style.display = 'block';
-        loadQuestion();
+    function beginGame() {
+        document.getElementById('intro-screen').style.display = 'none';
+        updateUI();
     }
 
-    function loadQuestion() {
-        const room = rooms[currentRoom];
-        const question = room.questions[currentQuestion];
-        contentDiv.innerHTML = `<h2>${room.title}</h2><p style="font-size: 1.4rem;">${question.q}</p>`;
-        inputField.value = "";
-        inputField.focus();
+    function updateUI() {
+        const currentZone = gameData[zoneIdx];
+        const currentQ = currentZone.questions[qIdx];
+        
+        // Update Map
+        document.querySelectorAll('.map-zone').forEach((z, i) => {
+            z.className = 'map-zone';
+            if (i < zoneIdx) z.classList.add('cleared');
+            if (i === zoneIdx) z.classList.add('active');
+        });
+
+        status.innerText = `DOOR ${zoneIdx + 1}: VERIFICATION ${qIdx + 1}/4`;
+        qText.innerText = currentQ.q;
+        input.value = "";
+        input.focus();
     }
 
-    inputField.addEventListener('keypress', (e) => {
+    input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            if (inputField.value.trim().toLowerCase() === rooms[currentRoom].questions[currentQuestion].a.toLowerCase()) {
-                currentQuestion++;
-                if (currentQuestion >= rooms[currentRoom].questions.length) {
-                    unlockSequence();
+            const userAns = input.value.trim().toLowerCase();
+            const correctAns = gameData[zoneIdx].questions[qIdx].a.toLowerCase();
+
+            if (userAns === correctAns) {
+                qIdx++;
+                feedback.innerText = "✓ VERIFIED";
+                feedback.style.color = "var(--neon)";
+                
+                if (qIdx >= 4) {
+                    openDoor();
                 } else {
-                    loadQuestion();
+                    setTimeout(updateUI, 500);
                 }
             } else {
-                feedback.innerText = "!! INCORRECT DATA !!";
-                setTimeout(() => { feedback.innerText = ""; }, 1500);
+                document.getElementById('main-display').classList.add('shake');
+                feedback.innerText = "× ACCESS DENIED";
+                feedback.style.color = "var(--danger)";
+                setTimeout(() => document.getElementById('main-display').classList.remove('shake'), 300);
             }
         }
     });
 
-    function unlockSequence() {
-        inputField.style.display = "none";
-        contentDiv.innerHTML = "<h2>KEY ACQUIRED...</h2>";
-        
-        const key = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        key.setAttribute("class", "key-animation");
-        const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-        use.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#icon-key");
-        key.appendChild(use);
-        document.getElementById('animation-zone').appendChild(key);
-
+    function openDoor() {
+        document.body.classList.remove('doors-open'); // Close doors
         setTimeout(() => {
-            document.querySelector(`#lock-${currentRoom} .svg-icon`).classList.add('unlocked');
-            document.querySelector(`#lock-${currentRoom} .lock-status`).innerText = "OPEN";
-            key.remove();
-            currentRoom++;
-            currentQuestion = 0;
-
-            if (currentRoom >= rooms.length) {
-                contentDiv.innerHTML = "<h1>VAULT OPENED</h1><p>Welcome to the Dinosaur Exhibit, Curator!</p>";
+            zoneIdx++;
+            qIdx = 0;
+            if (zoneIdx >= gameData.length) {
+                qText.innerText = "ALL DOORS SECURED. YOU HAVE ESCAPED!";
+                status.innerText = "MISSION COMPLETE";
+                input.style.display = "none";
             } else {
-                document.querySelector(`#lock-${currentRoom} .svg-icon`).classList.remove('unlocked');
-                document.querySelector(`#lock-${currentRoom} .lock-status`).innerText = "ACTIVE";
-                inputField.style.display = "block";
-                loadQuestion();
+                updateUI();
+                document.body.classList.add('doors-open'); // Open doors again
             }
-        }, 1000);
+        }, 2000);
     }
 </script>
 </body>
