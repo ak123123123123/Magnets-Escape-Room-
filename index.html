@@ -1,199 +1,554 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Dino-Vault: The Evolution Escape</title>
-    <style>
-        :root { --neon: #00ff41; --danger: #ff3131; --bg: #050505; --accent: #ffd700; }
-        
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Courier New', monospace; color: var(--neon); overflow: hidden; }
+<meta charset="UTF-8">
+<title>Dino-Vault: The Evolution Escape</title>
 
-        /* Dinosaur Background Aesthetic */
-        .bg-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
-                        url('https://images.unsplash.com/photo-1517922193564-c39309b80b91?auto=format&fit=crop&w=1200&q=80');
-            background-size: cover; background-position: center; z-index: -1; opacity: 0.4;
-        }
+<style>
+:root {
+    --neon: #00ff41;
+    --danger: #ff3131;
+    --bg: #050505;
+    --accent: #ffd700;
+}
 
-        #game-container {
-            display: flex; flex-direction: column; height: 100vh; width: 100vw;
-            border: 4px solid var(--neon); box-sizing: border-box;
-        }
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Courier New', monospace;
+    color: var(--neon);
+    overflow: hidden;
+}
 
-        /* The Sliding Blast Doors */
-        #door-left, #door-right {
-            position: fixed; top: 0; width: 50%; height: 100%; background: #222;
-            border: 5px solid #444; z-index: 1000; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
-            display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #555;
-        }
-        #door-left { left: 0; border-right: 2px solid var(--neon); }
-        #door-right { right: 0; border-left: 2px solid var(--neon); }
-        .doors-open #door-left { transform: translateX(-100%); }
-        .doors-open #door-right { transform: translateX(100%); }
+/* ===========================
+   DINOSAUR BACKGROUND
+=========================== */
 
-        /* Top Header & Map */
-        #header { padding: 20px; border-bottom: 2px solid var(--neon); background: rgba(0,0,0,0.9); }
-        #map { display: flex; justify-content: space-around; margin-top: 10px; }
-        .map-zone { padding: 5px 15px; border: 1px solid var(--neon); font-size: 0.7rem; opacity: 0.4; transition: 0.5s; }
-        .map-zone.active { opacity: 1; background: rgba(0,255,65,0.2); box-shadow: 0 0 10px var(--neon); }
-        .map-zone.cleared { background: var(--neon); color: black; opacity: 1; }
+.bg-overlay {
+    position: fixed;
+    inset: 0;
+    background:
+        linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.85)),
+        url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1400&q=80');
+    background-size: cover;
+    background-position: center;
+    z-index: -3;
+}
 
-        /* Interaction Area */
-        #main-display { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-        .question-text { font-size: 1.5rem; max-width: 700px; margin-bottom: 30px; min-height: 100px; }
-        
-        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); color: var(--neon); font-family: inherit; font-size: 2rem; text-align: center; outline: none; width: 300px; }
-        
-        #intro-screen { position: absolute; inset: 0; background: var(--bg); z-index: 1001; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; text-align: center; }
-        
-        .shake { animation: shake 0.3s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-    </style>
+/* Floating Dinosaur Shadows */
+
+.dino {
+    position: absolute;
+    opacity: 0.08;
+    font-size: 8rem;
+    animation: floatDino 18s linear infinite;
+    z-index: -2;
+}
+
+.dino:nth-child(1) {
+    top: 10%;
+    left: -10%;
+    animation-duration: 20s;
+}
+
+.dino:nth-child(2) {
+    top: 60%;
+    left: -20%;
+    animation-duration: 25s;
+}
+
+@keyframes floatDino {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(130vw);
+    }
+}
+
+/* ===========================
+   GAME CONTAINER
+=========================== */
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    border: 4px solid var(--neon);
+    box-sizing: border-box;
+}
+
+/* ===========================
+   BLAST DOORS
+=========================== */
+
+#door-left,
+#door-right {
+    position: fixed;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background:
+        linear-gradient(90deg, #111, #333);
+    border: 5px solid #444;
+    z-index: 1000;
+
+    transition:
+        transform 1.8s cubic-bezier(0.7,0,0.3,1);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 3rem;
+    color: #666;
+
+    overflow: hidden;
+}
+
+#door-left::before,
+#door-right::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,0.03),
+            rgba(255,255,255,0.03) 10px,
+            transparent 10px,
+            transparent 20px
+        );
+}
+
+#door-left {
+    left: 0;
+    border-right: 2px solid var(--neon);
+}
+
+#door-right {
+    right: 0;
+    border-left: 2px solid var(--neon);
+}
+
+.doors-open #door-left {
+    transform: translateX(-100%);
+}
+
+.doors-open #door-right {
+    transform: translateX(100%);
+}
+
+/* ===========================
+   INTRO SCREEN
+=========================== */
+
+#intro-screen {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+        url('https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=1400&q=80');
+
+    background-size: cover;
+    background-position: center;
+
+    z-index: 1001;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 50px;
+    text-align: center;
+}
+
+.intro-dino {
+    font-size: 7rem;
+    margin-bottom: 20px;
+    animation: roar 2s infinite alternate;
+}
+
+@keyframes roar {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(1.08);
+    }
+}
+
+#intro-screen h1 {
+    font-size: 4rem;
+    color: var(--accent);
+    text-shadow: 0 0 20px var(--accent);
+    margin-bottom: 20px;
+}
+
+#intro-screen p {
+    max-width: 700px;
+    line-height: 1.5;
+    font-size: 1.2rem;
+}
+
+/* ===========================
+   HEADER
+=========================== */
+
+#header {
+    padding: 20px;
+    border-bottom: 2px solid var(--neon);
+    background: rgba(0,0,0,0.85);
+}
+
+#map {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+
+.map-zone {
+    padding: 5px 15px;
+    border: 1px solid var(--neon);
+    font-size: 0.7rem;
+    opacity: 0.4;
+    transition: 0.5s;
+}
+
+.map-zone.active {
+    opacity: 1;
+    background: rgba(0,255,65,0.2);
+    box-shadow: 0 0 10px var(--neon);
+}
+
+.map-zone.cleared {
+    background: var(--neon);
+    color: black;
+    opacity: 1;
+}
+
+/* ===========================
+   MAIN DISPLAY
+=========================== */
+
+#main-display {
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px;
+    text-align: center;
+}
+
+.question-text {
+    font-size: 1.5rem;
+    max-width: 700px;
+    margin-bottom: 30px;
+    min-height: 100px;
+}
+
+input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--neon);
+    color: var(--neon);
+    font-family: inherit;
+    font-size: 2rem;
+    text-align: center;
+    outline: none;
+    width: 300px;
+}
+
+/* ===========================
+   BUTTONS
+=========================== */
+
+button {
+    padding: 20px 40px;
+    font-size: 1.3rem;
+    background: var(--neon);
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--neon);
+}
+
+/* ===========================
+   EFFECTS
+=========================== */
+
+.shake {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.door-message {
+    position: absolute;
+    top: 50%;
+    font-size: 4rem;
+    color: var(--accent);
+    z-index: 999;
+    animation: flash 2s forwards;
+}
+
+@keyframes flash {
+    0% { opacity: 0; transform: scale(0.5); }
+    20% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1); }
+}
+
+</style>
 </head>
+
 <body class="doors-open">
 
 <div class="bg-overlay"></div>
 
-<div id="door-left">SYSTEM</div>
+<div class="dino">🦖</div>
+<div class="dino">🦕</div>
+
+<div id="door-left">SECURITY</div>
 <div id="door-right">LOCKED</div>
 
 <div id="intro-screen">
+
+    <div class="intro-dino">🦖</div>
+
     <h1>THE DINOSAUR VAULT</h1>
-    <p>You are trapped in the security hub. The exhibit doors have malfunctioned.</p>
-    <p>There are <strong>4 SECURITY DOORS</strong> between you and the exit.</p>
-    <p>Each door requires <strong>4 EVIDENCE VERIFICATIONS</strong> to open.</p>
-    <button style="padding: 20px 40px; font-size: 1.5rem; background: var(--neon); cursor: pointer;" onclick="beginGame()">INITIALIZE SYSTEM</button>
+
+    <p>
+        The power systems have failed inside the Evolution Research Facility.
+        Massive containment doors stand between you and escape.
+    </p>
+
+    <p>
+        Solve all scientific verification challenges before the dinosaurs break containment.
+    </p>
+
+    <button onclick="beginGame()">INITIALIZE SYSTEM</button>
+
 </div>
 
 <div id="game-container">
+
     <div id="header">
-        <div style="text-align: center; font-weight: bold;">PARK SECURITY TERMINAL</div>
+
+        <div style="text-align:center;font-weight:bold;">
+            PARK SECURITY TERMINAL
+        </div>
+
         <div id="map">
             <div class="map-zone" id="zone-0">ZONE 1: FOSSILS</div>
             <div class="map-zone" id="zone-1">ZONE 2: ANATOMY</div>
             <div class="map-zone" id="zone-2">ZONE 3: EMBRYOS</div>
             <div class="map-zone" id="zone-3">ZONE 4: SELECTION</div>
         </div>
+
     </div>
 
     <div id="main-display">
-        <div id="status-line" style="margin-bottom: 10px; color: var(--accent);">DOOR 1: VERIFICATION 1/4</div>
-        <div class="question-text" id="q-text">System initializing...</div>
-        <input type="text" id="user-input" autocomplete="off" placeholder="???">
-        <p id="feedback" style="margin-top: 20px; min-height: 20px;"></p>
+
+        <div id="status-line"
+             style="margin-bottom:10px;color:var(--accent);">
+            DOOR 1: VERIFICATION 1/4
+        </div>
+
+        <div class="question-text" id="q-text">
+            System initializing...
+        </div>
+
+        <input type="text"
+               id="user-input"
+               autocomplete="off"
+               placeholder="???">
+
+        <p id="feedback"
+           style="margin-top:20px;min-height:20px;">
+        </p>
+
     </div>
+
 </div>
 
 <script>
-    const gameData = [
-        {
-            zone: "FOSSIL RECORD",
-            questions: [
-                { q: "The law of ____ states older fossils are deeper.", a: "superposition" },
-                { q: "Fossils used to date rock layers are called ____ fossils.", a: "index" },
-                { q: "Can we find soft tissue in most fossils? (yes/no)", a: "no" },
-                { q: "What do we call a scientist who studies fossils?", a: "paleontologist" }
-            ]
-        },
-        {
-            zone: "COMPARATIVE ANATOMY",
-            questions: [
-                { q: "Structures with similar bones but different uses are ____.", a: "homologous" },
-                { q: "Structures that look similar but have NO common ancestor are ____.", a: "analogous" },
-                { q: "A tailbone in a human is a _____ structure (no longer used).", a: "vestigial" },
-                { q: "Do homologous structures suggest a common ancestor? (yes/no)", a: "yes" }
-            ]
-        },
-        {
-            zone: "EMBRYOLOGY",
-            questions: [
-                { q: "All vertebrate embryos have ____ slits early on.", a: "gill" },
-                { q: "True or False: Human embryos have a tail during development.", a: "true" },
-                { q: "Shared embryonic traits suggest a shared ____.", a: "ancestor" },
-                { q: "Embryology studies the _____ of an organism.", a: "development" }
-            ]
-        },
-        {
-            zone: "NATURAL SELECTION",
-            questions: [
-                { q: "Organisms with the best traits survive. This is 'Survival of the ____'.", a: "fittest" },
-                { q: "A trait that helps an organism survive is an ____.", a: "adaptation" },
-                { q: "What provides the 'selection pressure'? (the ____)", a: "environment" },
-                { q: "Genetic ____ must exist for selection to happen.", a: "variation" }
-            ]
-        }
-    ];
 
-    let zoneIdx = 0;
-    let qIdx = 0;
+const gameData = [
+{
+    zone: "FOSSIL RECORD",
+    questions: [
+        { q: "The law of ____ states older fossils are deeper.", a: "superposition" },
+        { q: "Fossils used to date rock layers are called ____ fossils.", a: "index" },
+        { q: "Can we find soft tissue in most fossils? (yes/no)", a: "no" },
+        { q: "What do we call a scientist who studies fossils?", a: "paleontologist" }
+    ]
+},
+{
+    zone: "COMPARATIVE ANATOMY",
+    questions: [
+        { q: "Structures with similar bones but different uses are ____.", a: "homologous" },
+        { q: "Structures that look similar but have NO common ancestor are ____.", a: "analogous" },
+        { q: "A tailbone in a human is a _____ structure.", a: "vestigial" },
+        { q: "Do homologous structures suggest a common ancestor? (yes/no)", a: "yes" }
+    ]
+},
+{
+    zone: "EMBRYOLOGY",
+    questions: [
+        { q: "All vertebrate embryos have ____ slits early on.", a: "gill" },
+        { q: "True or False: Human embryos have a tail during development.", a: "true" },
+        { q: "Shared embryonic traits suggest a shared ____.", a: "ancestor" },
+        { q: "Embryology studies the _____ of an organism.", a: "development" }
+    ]
+},
+{
+    zone: "NATURAL SELECTION",
+    questions: [
+        { q: "Organisms with the best traits survive. This is 'Survival of the ____'.", a: "fittest" },
+        { q: "A trait that helps an organism survive is an ____.", a: "adaptation" },
+        { q: "What provides the selection pressure?", a: "environment" },
+        { q: "Genetic ____ must exist for selection to happen.", a: "variation" }
+    ]
+}
+];
 
-    const input = document.getElementById('user-input');
-    const qText = document.getElementById('q-text');
-    const status = document.getElementById('status-line');
-    const feedback = document.getElementById('feedback');
+let zoneIdx = 0;
+let qIdx = 0;
 
-    function beginGame() {
-        document.getElementById('intro-screen').style.display = 'none';
-        updateUI();
-    }
+const input = document.getElementById('user-input');
+const qText = document.getElementById('q-text');
+const status = document.getElementById('status-line');
+const feedback = document.getElementById('feedback');
 
-    function updateUI() {
-        const currentZone = gameData[zoneIdx];
-        const currentQ = currentZone.questions[qIdx];
-        
-        // Update Map
-        document.querySelectorAll('.map-zone').forEach((z, i) => {
-            z.className = 'map-zone';
-            if (i < zoneIdx) z.classList.add('cleared');
-            if (i === zoneIdx) z.classList.add('active');
-        });
+function beginGame() {
+    document.getElementById('intro-screen').style.display = 'none';
+    updateUI();
+}
 
-        status.innerText = `DOOR ${zoneIdx + 1}: VERIFICATION ${qIdx + 1}/4`;
-        qText.innerText = currentQ.q;
-        input.value = "";
-        input.focus();
-    }
+function updateUI() {
 
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const userAns = input.value.trim().toLowerCase();
-            const correctAns = gameData[zoneIdx].questions[qIdx].a.toLowerCase();
+    const currentZone = gameData[zoneIdx];
+    const currentQ = currentZone.questions[qIdx];
 
-            if (userAns === correctAns) {
-                qIdx++;
-                feedback.innerText = "✓ VERIFIED";
-                feedback.style.color = "var(--neon)";
-                
-                if (qIdx >= 4) {
-                    openDoor();
-                } else {
-                    setTimeout(updateUI, 500);
-                }
-            } else {
-                document.getElementById('main-display').classList.add('shake');
-                feedback.innerText = "× ACCESS DENIED";
-                feedback.style.color = "var(--danger)";
-                setTimeout(() => document.getElementById('main-display').classList.remove('shake'), 300);
-            }
-        }
+    document.querySelectorAll('.map-zone').forEach((z, i) => {
+        z.className = 'map-zone';
+
+        if (i < zoneIdx)
+            z.classList.add('cleared');
+
+        if (i === zoneIdx)
+            z.classList.add('active');
     });
 
-    function openDoor() {
-        document.body.classList.remove('doors-open'); // Close doors
-        setTimeout(() => {
-            zoneIdx++;
-            qIdx = 0;
-            if (zoneIdx >= gameData.length) {
-                qText.innerText = "ALL DOORS SECURED. YOU HAVE ESCAPED!";
-                status.innerText = "MISSION COMPLETE";
-                input.style.display = "none";
+    status.innerText =
+        `DOOR ${zoneIdx + 1}: VERIFICATION ${qIdx + 1}/4`;
+
+    qText.innerText = currentQ.q;
+
+    input.value = "";
+    input.focus();
+}
+
+input.addEventListener('keypress', (e) => {
+
+    if (e.key === 'Enter') {
+
+        const userAns =
+            input.value.trim().toLowerCase();
+
+        const correctAns =
+            gameData[zoneIdx].questions[qIdx].a.toLowerCase();
+
+        if (userAns === correctAns) {
+
+            qIdx++;
+
+            feedback.innerText = "✓ VERIFIED";
+            feedback.style.color = "var(--neon)";
+
+            if (qIdx >= 4) {
+                openDoorAnimation();
             } else {
-                updateUI();
-                document.body.classList.add('doors-open'); // Open doors again
+                setTimeout(updateUI, 500);
             }
-        }, 2000);
+
+        } else {
+
+            document.getElementById('main-display')
+                .classList.add('shake');
+
+            feedback.innerText = "× ACCESS DENIED";
+            feedback.style.color = "var(--danger)";
+
+            setTimeout(() => {
+                document.getElementById('main-display')
+                    .classList.remove('shake');
+            }, 300);
+        }
     }
+});
+
+/* ===========================
+   DOOR ANIMATION
+=========================== */
+
+function openDoorAnimation() {
+
+    const message = document.createElement('div');
+
+    message.className = 'door-message';
+    message.innerText = '🚪 ACCESS GRANTED';
+
+    document.body.appendChild(message);
+
+    document.body.classList.remove('doors-open');
+
+    setTimeout(() => {
+
+        document.body.classList.add('doors-open');
+
+        message.remove();
+
+        zoneIdx++;
+        qIdx = 0;
+
+        if (zoneIdx >= gameData.length) {
+
+            qText.innerText =
+                "🦖 ALL SECURITY DOORS OPENED. YOU ESCAPED THE DINOSAUR VAULT!";
+
+            status.innerText = "MISSION COMPLETE";
+
+            input.style.display = "none";
+
+        } else {
+
+            updateUI();
+
+        }
+
+    }, 2500);
+}
+
 </script>
+
 </body>
 </html>
