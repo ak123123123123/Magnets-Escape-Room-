@@ -2,63 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>The Lazarus Protocol | Advanced Evolution Escape</title>
+    <title>The Lazarus Protocol | Biometric Lock Override</title>
     <style>
-        :root { --neon: #00ff41; --danger: #ff3131; --bg: #050505; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        :root { --neon: #00ff41; --danger: #ff3131; --bg: #050505; --panel-bg: #111; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;}
         
-        /* The "Shake" Animation for wrong answers */
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-10px); border-color: var(--danger); }
-            50% { transform: translateX(10px); }
-            75% { transform: translateX(-10px); }
-            100% { transform: translateX(0); }
-        }
-        .error-shake { animation: shake 0.4s; }
+        /* The main terminal window */
+        #terminal { width: 90%; max-width: 800px; height: 90vh; border: 2px solid var(--neon); display: flex; flex-direction: column; background: var(--panel-bg); box-shadow: 0 0 30px rgba(0, 255, 65, 0.2); position: relative; }
 
-        #terminal {
-            width: 90%; max-width: 700px; border: 2px solid var(--neon); padding: 40px;
-            background: linear-gradient(180deg, rgba(0,255,65,0.05) 0%, rgba(0,0,0,1) 100%);
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
-        }
-
-        .progress-bar { width: 100%; height: 10px; background: #222; margin-bottom: 20px; }
-        #progress-fill { width: 0%; height: 100%; background: var(--neon); transition: width 0.5s; }
-
-        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); 
-                color: var(--neon); width: 100%; font-size: 1.5rem; outline: none; margin-top: 20px; }
+        /* Lock Status Bar */
+        #lock-panel { display: flex; justify-content: space-around; padding: 20px; border-bottom: 2px solid var(--neon); background: rgba(0,255,65,0.05); }
+        .lock-container { position: relative; width: 60px; height: 60px; }
         
-        .fade-in { animation: fadeIn 1s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* The actual SVG Locks/Keys will go here */
+        .svg-icon { width: 100%; height: 100%; fill: var(--neon); transition: all 0.5s; }
+        .lock-status { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; text-transform: uppercase; }
+        .unlocked { opacity: 0.3; filter: grayscale(1); } /* Style for completed locks */
+
+        /* Content Area */
+        #game-content { flex-grow: 1; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+        h2 { border-bottom: 1px solid var(--neon); padding-bottom: 10px; margin-top: 0;}
+        
+        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); color: var(--neon); width: 100%; font-size: 1.5rem; outline: none; margin-top: 20px; }
+        
+        /* Animations */
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-10px); } 50% { transform: translateX(10px); } 100% { transform: translateX(0); } }
+        .error-shake { animation: shake 0.3s; border-color: var(--danger) !important; }
+
+        @keyframes keyInsert { 
+            0% { transform: translate(-200px, 100px) scale(2); opacity: 0; }
+            50% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(5px, 0); opacity: 0; } /* Key 'disappears' into lock */
+        }
+        .key-animation { animation: keyInsert 1.5s forwards; position: absolute; z-index: 10; fill: var(--neon); width: 50px; height: 50px;}
+
     </style>
 </head>
 <body>
 
+<svg style="display: none;">
+    <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M12 17a2 2 0 0 0 2-2 2 2 0 0 0-2-2 2 2 0 0 0-2 2 2 2 0 0 0 2 2m6-9h-1V6a5 5 0 0 0-5-5 5 5 0 0 0-5 5v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2m-6-5a3 3 0 0 1 3 3v2H9V6a3 3 0 0 1 3-3Z"/></symbol>
+    <symbol id="icon-key" viewBox="0 0 24 24"><path d="M7 14a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m0-4a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4a3.91 3.91 0 0 0-1.16-2.83L9.41 10H11v2h2v-2h2v2h2v-2h1a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H9.41L7.83 5.58A4 4 0 0 0 7 10Z"/></symbol>
+</svg>
+
 <div id="terminal">
-    <div class="progress-bar"><div id="progress-fill"></div></div>
-    <div id="game-content" class="fade-in">
+    <div id="lock-panel">
+        <div class="lock-container" id="lock-0">
+            <svg class="svg-icon"><use xlink:href="#icon-lock"></use></svg>
+            <div class="lock-status">Active</div>
         </div>
-    <input type="text" id="user-input" autocomplete="off" style="display:none;">
-    <p id="feedback" style="color: var(--danger); margin-top: 10px;"></p>
+        <div class="lock-container" id="lock-1">
+            <svg class="svg-icon unlocked"><use xlink:href="#icon-lock"></use></svg>
+            <div class="lock-status">Locked</div>
+        </div>
+        <div class="lock-container" id="lock-2">
+            <svg class="svg-icon unlocked"><use xlink:href="#icon-lock"></use></svg>
+            <div class="lock-status">Locked</div>
+        </div>
+        <div class="lock-container" id="lock-3">
+            <svg class="svg-icon unlocked"><use xlink:href="#icon-lock"></use></svg>
+            <div class="lock-status">Locked</div>
+        </div>
+    </div>
+
+    <div id="animation-zone"></div>
+
+    <div id="game-content">
+        </div>
+    <div style="padding: 0 40px 40px 40px;">
+        <input type="text" id="user-input" autocomplete="off" placeholder="TYPE ANSWER & PRESS ENTER">
+        <p id="feedback" style="color: var(--danger); margin-top: 10px; min-height: 20px;"></p>
+    </div>
 </div>
 
 <script>
-    // ROOM DATA: Add as many questions as you want here!
+    // ROOM DATA (4 Rooms total to match 4 locks)
     const rooms = [
         {
-            title: "ROOM 1: THE FOSSIL VAULT",
+            title: "LOCK 1: FOSSIL EVIDENCE",
             questions: [
-                { q: "Data Trace Found: A fossil in the deepest rock layer is generally ____ than one near the surface. (older/younger)", a: "older" },
-                { q: "Which law states that younger rocks sit on top of older rocks?", a: "superposition" },
-                { q: "What do we call fossils used to define and identify geologic periods?", a: "index fossils" }
+                { q: "What principle says deeper rock layers are older?", a: "superposition" },
+                { q: "Fossils that are widespread but only existed for a short time are called _____ fossils.", a: "index" }
             ]
         },
         {
-            title: "ROOM 2: EMBRYOLOGY LAB",
+            title: "LOCK 2: ANATOMY LAB",
             questions: [
-                { q: "True or False: Human embryos have 'gill slits' early in development.", a: "true" },
-                { q: "Shared embryonic stages suggest a common _____.", a: "ancestor" }
+                { q: "Bat wings and human arms share structures. What are they called? (homologous/analogous)", a: "homologous" }
+            ]
+        },
+        {
+            title: "LOCK 3: EMBRYOLOGY LAB",
+            questions: [
+                { q: "True or False: Vertebrate embryos look similar in early stages.", a: "true" }
+            ]
+        },
+        {
+            title: "LOCK 4: THE ADAPTATION CHAMBER",
+            questions: [
+                { q: "What drives natural selection? (variation/mutation/environment)", a: "environment" }
             ]
         }
     ];
@@ -69,7 +111,7 @@
     const contentDiv = document.getElementById('game-content');
     const inputField = document.getElementById('user-input');
     const feedback = document.getElementById('feedback');
-    const progress = document.getElementById('progress-fill');
+    const animZone = document.getElementById('animation-zone');
 
     function loadQuestion() {
         const room = rooms[currentRoom];
@@ -77,12 +119,10 @@
         
         contentDiv.innerHTML = `
             <h2>${room.title}</h2>
-            <p>Question ${currentQuestion + 1} of ${room.questions.length}</p>
-            <hr>
-            <p style="font-size: 1.2rem;">${question.q}</p>
+            <p>Verification Layer: ${currentQuestion + 1} of ${room.questions.length}</p>
+            <p style="font-size: 1.4rem; margin-top: 30px;">${question.q}</p>
         `;
         inputField.value = "";
-        inputField.style.display = "block";
         inputField.focus();
     }
 
@@ -96,41 +136,69 @@
                 feedback.innerText = "";
                 
                 if (currentQuestion >= rooms[currentRoom].questions.length) {
-                    currentRoom++;
-                    currentQuestion = 0;
-                    if (currentRoom >= rooms.length) {
-                        winGame();
-                        return;
-                    }
+                    // Room Complete! Trigger Lock Animation
+                    triggerLockOverride();
+                } else {
+                    loadQuestion(); // Next question in same room
                 }
-                updateProgress();
-                loadQuestion();
             } else {
-                // Trigger the Shake Animation
+                // Wrong Answer: Shake Terminal
                 document.getElementById('terminal').classList.add('error-shake');
-                feedback.innerText = "!! ACCESS DENIED: INCORRECT DATA !!";
-                setTimeout(() => {
-                    document.getElementById('terminal').classList.remove('error-shake');
-                }, 4000);
+                feedback.innerText = "!! DATA CORRUPT: ACCESS DENIED !!";
+                setTimeout(() => { document.getElementById('terminal').classList.remove('error-shake'); }, 300);
             }
         }
     });
 
-    function updateProgress() {
-        const total = rooms.length;
-        const perc = (currentRoom / total) * 100;
-        progress.style.width = perc + "%";
+    function triggerLockOverride() {
+        // 1. Hide Input
+        inputField.style.display = "none";
+        contentDiv.innerHTML = "<h2>OVERRIDING LOCK...</h2>";
+
+        // 2. Create the flying key
+        const key = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        key.setAttribute("class", "key-animation");
+        const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", "#icon-key");
+        key.appendChild(use);
+        animZone.appendChild(key);
+
+        // 3. After key animation finishes (1.5s), open the lock
+        setTimeout(() => {
+            // Un-highlight current lock, highlight next
+            const currentLockSVG = document.querySelector(`#lock-${currentRoom} .svg-icon`);
+            currentLockSVG.classList.add('unlocked');
+            document.querySelector(`#lock-${currentRoom} .lock-status`).innerText = "OVERRIDDEN";
+
+            key.remove(); // Remove key
+
+            currentRoom++;
+            currentQuestion = 0;
+
+            if (currentRoom >= rooms.length) {
+                winGame();
+            } else {
+                // Highlight the next lock
+                const nextLockSVG = document.querySelector(`#lock-${currentRoom} .svg-icon`);
+                nextLockSVG.classList.remove('unlocked');
+                document.querySelector(`#lock-${currentRoom} .lock-status`).innerText = "ACTIVE";
+                
+                inputField.style.display = "block";
+                loadQuestion();
+            }
+        }, 1500);
     }
 
     function winGame() {
-        progress.style.width = "100%";
-        contentDiv.innerHTML = "<h2>SYSTEM OVERRIDE SUCCESSFUL</h2><p>You have secured the DNA. Evolution verified.</p>";
+        contentDiv.innerHTML = "<h2 style='color: white;'>SYSTEM SECURED</h2><p>Lazarus Protocol successful. Evolution verified. Access Granted.</p>";
         inputField.style.display = "none";
     }
 
-    // Start the game
-    loadQuestion();
+    loadQuestion(); // Start game
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
