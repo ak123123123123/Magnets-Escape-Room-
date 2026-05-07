@@ -2,125 +2,134 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Lazarus Protocol: Evolution Escape Room</title>
+    <title>The Lazarus Protocol | Advanced Evolution Escape</title>
     <style>
-        :root {
-            --neon-green: #39ff14;
-            --dark-bg: #0d0d0d;
+        :root { --neon: #00ff41; --danger: #ff3131; --bg: #050505; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        
+        /* The "Shake" Animation for wrong answers */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); border-color: var(--danger); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
         }
-        body {
-            background-color: var(--dark-bg);
-            color: var(--neon-green);
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
+        .error-shake { animation: shake 0.4s; }
+
+        #terminal {
+            width: 90%; max-width: 700px; border: 2px solid var(--neon); padding: 40px;
+            background: linear-gradient(180deg, rgba(0,255,65,0.05) 0%, rgba(0,0,0,1) 100%);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
         }
-        #game-container {
-            width: 80%;
-            max-width: 800px;
-            border: 2px solid var(--neon-green);
-            padding: 30px;
-            background: rgba(0, 255, 0, 0.05);
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
-        }
-        h1 { text-align: center; text-transform: uppercase; letter-spacing: 5px; }
-        .stage { display: none; }
-        .active { display: block; }
-        input {
-            background: transparent;
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            padding: 10px;
-            width: 100%;
-            margin-top: 20px;
-            font-size: 1.2rem;
-            text-align: center;
-        }
-        button {
-            background: var(--neon-green);
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            margin-top: 20px;
-            width: 100%;
-            cursor: pointer;
-            font-weight: bold;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        button:hover { background: #32cd32; }
-        .feedback { margin-top: 15px; color: #ff4444; font-weight: bold; text-align: center; min-height: 20px; }
-        .hint { font-size: 0.8rem; color: #888; margin-top: 10px; }
+
+        .progress-bar { width: 100%; height: 10px; background: #222; margin-bottom: 20px; }
+        #progress-fill { width: 0%; height: 100%; background: var(--neon); transition: width 0.5s; }
+
+        input { background: transparent; border: none; border-bottom: 2px solid var(--neon); 
+                color: var(--neon); width: 100%; font-size: 1.5rem; outline: none; margin-top: 20px; }
+        
+        .fade-in { animation: fadeIn 1s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <h1>The Lazarus Protocol</h1>
-    <hr>
-
-    <div id="stage-0" class="stage active">
-        <p>> ACCESS DENIED. BIOMETRIC SCAN FAILED.</p>
-        <p>> PREHISTORIC DNA SEQUENCE DETECTED IN UNAUTHORIZED SECTOR.</p>
-        <p>> To regain control of the vault, you must solve the evolutionary sequence puzzles.</p>
-        <button onclick="nextStage(1)">START INITIALIZATION</button>
-    </div>
-
-    <div id="stage-1" class="stage">
-        <h3>LOCK 01: THE FOSSIL RECORD</h3>
-        <p>In a rock canyon, Layer D is at the bottom and Layer A is at the top. You find a trilobite in Layer D. What principle tells us Layer D is older? (Enter the Letter + Total Layers: 4)</p>
-        <p>A) Natural Selection | B) Law of Superposition | C) Mutation</p>
-        <input type="text" id="input-1" placeholder="ENTER CODE">
-        <div id="error-1" class="feedback"></div>
-        <button onclick="checkLock(1, 'B4')">SUBMIT DECRYPTION</button>
-    </div>
-
-    <div id="stage-2" class="stage">
-        <h3>LOCK 02: COMMON ANCESTRY</h3>
-        <p>Human arms, whale flippers, and bat wings share the same bone structure despite different uses. What is the scientific term for these structures?</p>
-        <input type="text" id="input-2" placeholder="ENTER TERM">
-        <div id="error-2" class="feedback"></div>
-        <button onclick="checkLock(2, 'homologous')">SUBMIT DECRYPTION</button>
-    </div>
-
-    <div id="stage-3" class="stage">
-        <h3>LOCK 03: THE SELECTION PRESSURE</h3>
-        <p>Industrial soot darkens the trees. Dark moths survive at 80%, Light moths at 20%. Which moth had the higher biological fitness (L for Light/D for Dark) + its survival percentage?</p>
-        <input type="text" id="input-3" placeholder="Example: D50">
-        <div id="error-3" class="feedback"></div>
-        <button onclick="checkLock(3, 'D80')">SUBMIT DECRYPTION</button>
-    </div>
-
-    <div id="stage-4" class="stage">
-        <h2 style="color: var(--neon-green)">> ACCESS GRANTED</h2>
-        <p>> DNA SEQUENCE SECURED.</p>
-        <p>> EVOLUTIONARY HISTORY VERIFIED.</p>
-        <p>> Congratulations, Researchers. The vault is open.</p>
-        <button onclick="location.reload()">REBOOT SYSTEM</button>
-    </div>
+<div id="terminal">
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+    <div id="game-content" class="fade-in">
+        </div>
+    <input type="text" id="user-input" autocomplete="off" style="display:none;">
+    <p id="feedback" style="color: var(--danger); margin-top: 10px;"></p>
 </div>
 
 <script>
-    function nextStage(stageNum) {
-        document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
-        document.getElementById(`stage-${stageNum}`).classList.add('active');
+    // ROOM DATA: Add as many questions as you want here!
+    const rooms = [
+        {
+            title: "ROOM 1: THE FOSSIL VAULT",
+            questions: [
+                { q: "Data Trace Found: A fossil in the deepest rock layer is generally ____ than one near the surface. (older/younger)", a: "older" },
+                { q: "Which law states that younger rocks sit on top of older rocks?", a: "superposition" },
+                { q: "What do we call fossils used to define and identify geologic periods?", a: "index fossils" }
+            ]
+        },
+        {
+            title: "ROOM 2: EMBRYOLOGY LAB",
+            questions: [
+                { q: "True or False: Human embryos have 'gill slits' early in development.", a: "true" },
+                { q: "Shared embryonic stages suggest a common _____.", a: "ancestor" }
+            ]
+        }
+    ];
+
+    let currentRoom = 0;
+    let currentQuestion = 0;
+
+    const contentDiv = document.getElementById('game-content');
+    const inputField = document.getElementById('user-input');
+    const feedback = document.getElementById('feedback');
+    const progress = document.getElementById('progress-fill');
+
+    function loadQuestion() {
+        const room = rooms[currentRoom];
+        const question = room.questions[currentQuestion];
+        
+        contentDiv.innerHTML = `
+            <h2>${room.title}</h2>
+            <p>Question ${currentQuestion + 1} of ${room.questions.length}</p>
+            <hr>
+            <p style="font-size: 1.2rem;">${question.q}</p>
+        `;
+        inputField.value = "";
+        inputField.style.display = "block";
+        inputField.focus();
     }
 
-    function checkLock(stageNum, correct) {
-        const input = document.getElementById(`input-${stageNum}`).value.trim().toLowerCase();
-        const errorDiv = document.getElementById(`error-${stageNum}`);
-        
-        if (input === correct.toLowerCase()) {
-            nextStage(stageNum + 1);
-        } else {
-            errorDiv.innerText = "> INCORRECT CODE. ACCESS DENIED.";
-            setTimeout(() => { errorDiv.innerText = ""; }, 2000);
+    inputField.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            const answer = inputField.value.trim().toLowerCase();
+            const correctAnswer = rooms[currentRoom].questions[currentQuestion].a.toLowerCase();
+
+            if (answer === correctAnswer) {
+                currentQuestion++;
+                feedback.innerText = "";
+                
+                if (currentQuestion >= rooms[currentRoom].questions.length) {
+                    currentRoom++;
+                    currentQuestion = 0;
+                    if (currentRoom >= rooms.length) {
+                        winGame();
+                        return;
+                    }
+                }
+                updateProgress();
+                loadQuestion();
+            } else {
+                // Trigger the Shake Animation
+                document.getElementById('terminal').classList.add('error-shake');
+                feedback.innerText = "!! ACCESS DENIED: INCORRECT DATA !!";
+                setTimeout(() => {
+                    document.getElementById('terminal').classList.remove('error-shake');
+                }, 4000);
+            }
         }
+    });
+
+    function updateProgress() {
+        const total = rooms.length;
+        const perc = (currentRoom / total) * 100;
+        progress.style.width = perc + "%";
     }
+
+    function winGame() {
+        progress.style.width = "100%";
+        contentDiv.innerHTML = "<h2>SYSTEM OVERRIDE SUCCESSFUL</h2><p>You have secured the DNA. Evolution verified.</p>";
+        inputField.style.display = "none";
+    }
+
+    // Start the game
+    loadQuestion();
 </script>
 
 </body>
