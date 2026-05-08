@@ -1,67 +1,365 @@
 <!DOCTYPE html>
-function playVaultAnimation(zone){
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino-Vault: The Evolution Escape</title>
 
-  locksOpened++;
+<style>
+:root{
+    --neon:#00ff41;
+    --danger:#ff3131;
+    --bg:#050505;
+    --accent:#ffd700;
+}
 
-  const overlay=document.getElementById('vault-overlay');
-  const vault=document.getElementById('vault');
-  const lock=document.querySelector('.lock'+(zone+1));
+body,html{
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden; background:black;
+    font-family:'Courier New', monospace; color:var(--neon);
+}
 
-  overlay.style.display='flex';
+/* ===========================
+   BACKGROUND
+=========================== */
+.bg-overlay{
+    position:fixed; inset:0;
+    background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.9)),
+                url('https://images.unsplash.com/photo-1550355191-aa8a80b403e8?auto=format&fit=crop&w=1400&q=80');
+    background-size:cover; background-position:center; z-index:-5;
+}
 
-  setTimeout(()=>{
-    lock.classList.add('removed');
-  },400);
+.dino{
+    position:absolute; opacity:0.08; font-size:8rem; z-index:-4;
+    animation:floatDino linear infinite;
+}
 
-  document.getElementById('vault-text').textContent=
-    (4-locksOpened)+' LOCKS REMAIN';
+.dino:nth-child(1){ top:10%; left:-10%; animation-duration:20s; }
+.dino:nth-child(2){ top:60%; left:-20%; animation-duration:28s; }
 
-  if(locksOpened < 4){
+@keyframes floatDino{
+    from{ transform:translateX(-10vw); }
+    to{ transform:translateX(110vw); }
+}
 
-    setTimeout(()=>{
-      overlay.style.display='none';
-    },3200);
+/* ===========================
+   BLAST DOORS
+=========================== */
+#door-left, #door-right{
+    position:fixed; top:0; width:50%; height:100%; z-index:1000;
+    display:flex; justify-content:center; align-items:center;
+    font-size:3rem; color:#666; background:linear-gradient(90deg,#111,#333);
+    transition:transform 1.8s cubic-bezier(0.7,0,0.3,1);
+}
 
-  } else {
+#door-left{ left:0; border-right:3px solid var(--neon); }
+#door-right{ right:0; border-left:3px solid var(--neon); }
 
-    setTimeout(()=>{
+.doors-open #door-left{ transform:translateX(-100%); }
+.doors-open #door-right{ transform:translateX(100%); }
 
-      document.getElementById('vault-text').textContent='ALL LOCKS RELEASED';
+/* ===========================
+   INTRO SCREEN
+=========================== */
+#intro-screen{
+    position:absolute; inset:0; z-index:1001;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+                url('https://images.unsplash.com/photo-1525877442103-5ddb2089e2bb?auto=format&fit=crop&w=1400&q=80');
+    background-size:cover; background-position:center;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    text-align:center; padding:40px;
+}
 
-      vault.classList.add('open');
+.intro-dino{ font-size:7rem; animation:roar 2s infinite alternate; }
+@keyframes roar{ from{ transform:scale(1); } to{ transform:scale(1.08); } }
 
-      setTimeout(()=>{
+#intro-screen h1{ font-size:4rem; color:var(--accent); text-shadow:0 0 20px var(--accent); }
+#intro-screen p{ max-width:700px; line-height:1.5; font-size:1.2rem; color: white; }
 
-        document.getElementById('final').style.display='flex';
+button{
+    margin-top:20px; padding:18px 40px; font-size:1.2rem; font-weight:bold;
+    border:none; cursor:pointer; background:var(--neon); transition:0.3s;
+}
 
-        if(!fireworkLoop){
-          fireworkLoop=setInterval(firework,400);
+button:hover{ transform:scale(1.05); box-shadow:0 0 20px var(--neon); }
+
+/* ===========================
+   GAME CONTAINER
+=========================== */
+#game-container{
+    display:flex; flex-direction:column; width:100vw; height:100vh;
+    border:4px solid var(--neon); box-sizing:border-box;
+}
+
+#header{ padding:20px; border-bottom:2px solid var(--neon); background:rgba(0,0,0,0.85); }
+#map{ display:flex; justify-content:space-around; margin-top:10px; }
+
+.map-zone{
+    padding:6px 14px; border:1px solid var(--neon); font-size:0.8rem;
+    cursor: pointer; opacity:0.4; transition:0.4s;
+}
+
+.map-zone:hover { background: rgba(0,255,65,0.1); opacity: 0.8; }
+.map-zone.active{ opacity:1; background:rgba(0,255,65,0.2); box-shadow:0 0 10px var(--neon); }
+.map-zone.cleared{ background:var(--neon); color:black; opacity:1; }
+
+#main-display{
+    flex-grow:1; display:flex; flex-direction:column;
+    justify-content:center; align-items:center; text-align:center; padding:40px;
+}
+
+#question-grid{ display:grid; grid-template-columns:repeat(2, 220px); gap:20px; margin-bottom:40px; }
+
+.question-card{
+    border:2px solid var(--neon); padding:20px; cursor:pointer;
+    background:rgba(0,255,65,0.05); transition:0.3s;
+}
+
+.question-card:hover{ transform:scale(1.05); box-shadow:0 0 15px var(--neon); }
+.question-card.completed{ background:var(--neon); color:black; font-weight:bold; }
+.question-card.active{ border-color:var(--accent); box-shadow:0 0 20px var(--accent); }
+
+.question-text{ font-size:1.5rem; max-width:700px; min-height:100px; margin-bottom:20px; }
+input{
+    background:transparent; border:none; border-bottom:2px solid var(--neon);
+    color:var(--neon); font-family:inherit; font-size:2rem;
+    text-align:center; width:450px; outline:none;
+}
+
+#hint-box{ margin-top:15px; color:var(--accent); font-style:italic; min-height:25px; opacity:0; transition:opacity 1s; }
+#hint-box.show{ opacity:1; }
+
+.shake{ animation:shake 0.3s; }
+@keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-10px); }
+    75%{ transform:translateX(10px); }
+}
+
+.door-message{
+    position:absolute; top:50%; font-size:4rem; color:var(--accent);
+    z-index:999; animation:flash 2s forwards; text-align: center; width: 100%;
+}
+@keyframes flash{
+    0%{ opacity:0; transform:scale(0.5); }
+    20%{ opacity:1; transform:scale(1.2); }
+    100%{ opacity:0; transform:scale(1); }
+}
+</style>
+</head>
+
+<body class="doors-open">
+
+<div class="bg-overlay"></div>
+<div class="dino">🦖</div>
+<div class="dino">🦕</div>
+
+<div id="door-left">SECURITY</div>
+<div id="door-right">LOCKED</div>
+
+<div id="intro-screen">
+    <div class="intro-dino">🦖</div>
+    <h1>THE DINOSAUR VAULT</h1>
+    <p>Lockdown active. All vaults are accessible. Select any zone on the map to begin verification. You must clear all 16 locks to escape.</p>
+    <button onclick="beginGame()">INITIALIZE SYSTEM</button>
+</div>
+
+<div id="game-container">
+    <div id="header">
+        <div style="text-align:center;font-weight:bold; letter-spacing: 2px;">PARK SECURITY TERMINAL</div>
+        <div id="map">
+            <div class="map-zone" onclick="switchZone(0)" id="zone-0">ZONE 1: FOSSILS</div>
+            <div class="map-zone" onclick="switchZone(1)" id="zone-1">ZONE 2: ANATOMY</div>
+            <div class="map-zone" onclick="switchZone(2)" id="zone-2">ZONE 3: EMBRYOS</div>
+            <div class="map-zone" onclick="switchZone(3)" id="zone-3">ZONE 4: SELECTION</div>
+        </div>
+    </div>
+
+    <div id="main-display">
+        <div id="status-line" style="margin-bottom:20px;color:var(--accent); font-weight: bold;">SELECT A VAULT ABOVE</div>
+        <div id="question-grid"></div>
+        <div class="question-text" id="q-text">System Online. Access any zone to begin.</div>
+        <input type="text" id="user-input" autocomplete="off" placeholder="TYPE ANSWER HERE">
+        <p id="feedback" style="margin-top:20px;min-height:20px;"></p>
+        <p id="hint-box"></p>
+    </div>
+</div>
+
+<script>
+const gameData = [
+    {
+        zone:"FOSSILS",
+        questions:[
+            { q:"The law of ____ states older fossils are deeper.", a:"superposition", hint:"It starts with 'super...'" },
+            { q:"Fossils used to date rock layers are called ____ fossils.", a:"index", hint:"These fossils help determine age." },
+            { q:"Can we find soft tissue in most fossils? (yes/no)", a:"no", hint:"Most fossils are mineralized." },
+            { q:"What do we call a scientist who studies fossils?", a:"paleontologist", hint:"They dig for fossils." }
+        ]
+    },
+    {
+        zone:"ANATOMY",
+        questions:[
+            { q:"Structures with similar bones but different uses are ____.", a:"homologous", hint:"These structures suggest common ancestry." },
+            { q:"Structures that look similar but have NO common ancestor are ____.", a:"analogous", hint:"Bird and insect wings are examples." },
+            { q:"A tailbone in a human is a _____ structure.", a:"vestigial", hint:"It no longer serves its original purpose." },
+            { q:"Do homologous structures suggest a common ancestor? (yes/no)", a:"yes", hint:"Think evolution." }
+        ]
+    },
+    {
+        zone:"EMBRYOLOGY",
+        questions:[
+            { q:"All vertebrate embryos have ____ slits early on.", a:"gill", hint:"Fish use them to breathe." },
+            { q:"True or False: Human embryos have a tail during development.", a:"true", hint:"Humans briefly develop one." },
+            { q:"Shared embryonic traits suggest a shared ____.", a:"ancestor", hint:"Evolutionary relationship." },
+            { q:"Embryology studies the _____ of an organism.", a:"development", hint:"Growth from embryo to adult." }
+        ]
+    },
+    {
+        zone:"SELECTION",
+        questions:[
+            { q:"Organisms with the best traits survive. This is 'Survival of the ____'.", a:"fittest", hint:"Darwin used this phrase." },
+            { q:"A trait that helps an organism survive is an ____.", a:"adaptation", hint:"Camouflage is one example." },
+            { q:"What provides the selection pressure?", a:"environment", hint:"Climate and predators are part of it." },
+            { q:"Genetic ____ must exist for selection to happen.", a:"variation", hint:"Differences between individuals." }
+        ]
+    }
+];
+
+let activeZoneIdx = 0;
+let activeQIdx = null;
+let globalSolved = { 0: [], 1: [], 2: [], 3: [] }; // Tracks solved questions per zone
+let hintTimer;
+
+const input = document.getElementById('user-input');
+const qText = document.getElementById('q-text');
+const status = document.getElementById('status-line');
+const feedback = document.getElementById('feedback');
+const hintBox = document.getElementById('hint-box');
+const questionGrid = document.getElementById('question-grid');
+
+function beginGame(){
+    document.getElementById('intro-screen').style.display = 'none';
+    switchZone(0);
+}
+
+function switchZone(idx) {
+    activeZoneIdx = idx;
+    activeQIdx = null;
+    qText.innerText = "Zone Accessed. Select a data lock...";
+    feedback.innerText = "";
+    input.value = "";
+    clearTimeout(hintTimer);
+    hintBox.classList.remove('show');
+    updateUI();
+}
+
+function updateUI(){
+    const currentZone = gameData[activeZoneIdx];
+    
+    // Update Header Map
+    document.querySelectorAll('.map-zone').forEach((z, i) => {
+        z.className = 'map-zone';
+        if (globalSolved[i].length >= 4) z.classList.add('cleared');
+        if (i === activeZoneIdx) z.classList.add('active');
+    });
+
+    // Update Status Line
+    const totalSolved = Object.values(globalSolved).flat().length;
+    status.innerText = `VAULT ${activeZoneIdx + 1} | TOTAL PROGRESS: ${totalSolved}/16 SECURED`;
+
+    // Render Question Grid
+    questionGrid.innerHTML = "";
+    currentZone.questions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        
+        if(globalSolved[activeZoneIdx].includes(index)){
+            card.classList.add('completed');
+            card.innerText = '✓ SECURED';
+        } else {
+            card.innerText = `LOCK ${index + 1}`;
         }
 
-      },3200);
+        if(activeQIdx === index) card.classList.add('active');
 
-    },2200);
-  }
+        card.onclick = () => {
+            if(globalSolved[activeZoneIdx].includes(index)) return;
+            activeQIdx = index;
+            qText.innerText = q.q;
+            input.value = "";
+            input.focus();
+            startHintTimer(q.hint);
+            updateUI();
+        };
+        questionGrid.appendChild(card);
+    });
 }
 
-function firework(){
-
-  const f=document.createElement('div');
-
-  f.className='firework';
-
-  f.style.left=Math.random()*100+'vw';
-  f.style.top=Math.random()*80+'vh';
-
-  f.style.background='hsl('+Math.random()*360+',100%,50%)';
-
-  document.getElementById('final').appendChild(f);
-
-  setTimeout(()=>{
-    f.remove();
-  },1000);
+function startHintTimer(hint){
+    clearTimeout(hintTimer);
+    hintBox.innerText = "";
+    hintBox.classList.remove('show');
+    hintTimer = setTimeout(() => {
+        hintBox.innerText = "🦖 RAPTOR AI HINT: " + hint;
+        hintBox.classList.add('show');
+    }, 12000);
 }
 
+input.addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') {
+        if(activeQIdx === null) return;
+
+        const currentQ = gameData[activeZoneIdx].questions[activeQIdx];
+        const userAns = input.value.trim().toLowerCase();
+
+        if(userAns === currentQ.a.toLowerCase()) {
+            globalSolved[activeZoneIdx].push(activeQIdx);
+            feedback.innerText = "✓ LOCK SECURED";
+            feedback.style.color = "var(--neon)";
+            clearTimeout(hintTimer);
+            hintBox.classList.remove('show');
+            activeQIdx = null;
+            qText.innerText = "Select next lock or switch zones...";
+            
+            checkVictory();
+            updateUI();
+        } else {
+            document.getElementById('main-display').classList.add('shake');
+            feedback.innerText = "× ACCESS DENIED";
+            feedback.style.color = "var(--danger)";
+            setTimeout(() => document.getElementById('main-display').classList.remove('shake'), 300);
+        }
+    }
+});
+
+function checkVictory() {
+    const totalSolved = Object.values(globalSolved).flat().length;
+    
+    // Check if current zone just finished
+    if (globalSolved[activeZoneIdx].length === 4) {
+        showFlashMessage(`VAULT ${activeZoneIdx + 1} FULLY SECURED`);
+    }
+
+    if (totalSolved === 16) {
+        document.body.classList.remove('doors-open');
+        setTimeout(() => {
+            qText.innerHTML = "<h2 style='color:var(--accent)'>🦖 ALL SYSTEMS SECURED</h2>YOU HAVE ESCAPED THE DINOSAUR VAULT!";
+            status.innerText = "MISSION SUCCESS";
+            input.style.display = 'none';
+            questionGrid.style.display = 'none';
+            hintBox.style.display = 'none';
+            document.body.classList.add('doors-open');
+        }, 2000);
+    }
+}
+
+function showFlashMessage(txt) {
+    const msg = document.createElement('div');
+    msg.className = 'door-message';
+    msg.innerText = txt;
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 2000);
+}
 </script>
 </body>
 </html>
