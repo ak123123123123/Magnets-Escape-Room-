@@ -1,70 +1,65 @@
 <!DOCTYPE html>
-function unlockAnimation(zone){
+function playVaultAnimation(zone){
 
-    completedLocks++;
+  locksOpened++;
 
-    const overlay = document.getElementById('vault-overlay');
+  const overlay=document.getElementById('vault-overlay');
+  const vault=document.getElementById('vault');
+  const lock=document.querySelector('.lock'+(zone+1));
 
-    overlay.style.display = 'flex';
+  overlay.style.display='flex';
 
-    const lock = document.querySelector(`.lock${zone + 1}`);
+  setTimeout(()=>{
+    lock.classList.add('removed');
+  },400);
 
-    setTimeout(() => {
-        lock.classList.add('removed');
-    }, 500);
+  document.getElementById('vault-text').textContent=
+    (4-locksOpened)+' LOCKS REMAIN';
 
-    document.getElementById('vault-text').innerText =
-        `${4 - completedLocks} LOCKS REMAIN`;
+  if(locksOpened < 4){
 
-    if(completedLocks < 4){
+    setTimeout(()=>{
+      overlay.style.display='none';
+    },3200);
 
-        setTimeout(() => {
-            overlay.style.display = 'none';
-        }, 3500);
+  } else {
 
-    } else {
+    setTimeout(()=>{
 
-        setTimeout(() => {
+      document.getElementById('vault-text').textContent='ALL LOCKS RELEASED';
 
-            document.getElementById('vault-text').innerText =
-                'ALL LOCKS RELEASED';
+      vault.classList.add('open');
 
-            document.getElementById('vault-door')
-                .classList.add('open');
+      setTimeout(()=>{
 
-            setTimeout(() => {
+        document.getElementById('final').style.display='flex';
 
-                document.getElementById('final')
-                    .style.display = 'flex';
+        if(!fireworkLoop){
+          fireworkLoop=setInterval(firework,400);
+        }
 
-                setInterval(firework, 400);
+      },3200);
 
-            }, 3500);
-
-        }, 2500);
-
-    }
-
+    },2200);
+  }
 }
 
 function firework(){
 
-    const f = document.createElement('div');
+  const f=document.createElement('div');
 
-    f.className = 'firework';
+  f.className='firework';
 
-    f.style.left = Math.random() * 100 + 'vw';
-    f.style.top = Math.random() * 80 + 'vh';
+  f.style.left=Math.random()*100+'vw';
+  f.style.top=Math.random()*80+'vh';
 
-    f.style.background =
-        `hsl(${Math.random() * 360},100%,50%)`;
+  f.style.background='hsl('+Math.random()*360+',100%,50%)';
 
-    document.getElementById('final').appendChild(f);
+  document.getElementById('final').appendChild(f);
 
-    setTimeout(() => {
-        f.remove();
-    }, 1000);
-
+  setTimeout(()=>{
+    f.remove();
+  },1000);
 }
 
 </script>
